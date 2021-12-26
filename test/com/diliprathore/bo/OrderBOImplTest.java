@@ -28,13 +28,13 @@ public class OrderBOImplTest {
 
     @Test
     public void placeOrder_shouldCreateOrder() throws SQLException, BOException {
-        Order order = new Order();
-        when(dao.create(order)).thenReturn(1); // setting expectation here
+//        Order order = new Order();
+        when(dao.create(any(Order.class))).thenReturn(1); // setting expectation here
 
-        boolean result = bo.placeOrder(order);
+        boolean result = bo.placeOrder(any(Order.class));
         assertTrue(result);
 
-        verify(dao).create(order); // verify that dao.create method is actually being called inside the BO 'placeOrder' method
+        verify(dao).create(any(Order.class)); // verify that dao.create method is actually being called inside the BO 'placeOrder' method
     }
 
     @Test
@@ -103,7 +103,32 @@ public class OrderBOImplTest {
         when(dao.update(order)).thenThrow(SQLException.class);
         bo.cancelOrder(id);
 
-        verify(dao).read(id);
-        verify(dao).update(order);
+        verify(dao, atLeast(1)).read(id);
+        verify(dao, times(1)).update(order);
+    }
+
+    @Test
+    public void deleteOrder_shouldDeleteOrder() throws BOException, SQLException {
+        int id = 10;
+        when(dao.delete(id)).thenReturn(1);
+        boolean result = bo.deleteOrder(id);
+        assertTrue(result);
+        verify(dao).delete(id);
+    }
+
+    @Test
+    public void deleteOrder_shouldNotDeleteOrder() throws BOException, SQLException {
+        int id = 10;
+        when(dao.delete(id)).thenReturn(0);
+        boolean result = bo.deleteOrder(id);
+        assertFalse(result);
+        verify(dao).delete(id);
+    }
+
+    @Test(expected = BOException.class)
+    public void deleteOrder_shouldThrowBOException() throws BOException, SQLException {
+        int id = 10;
+        when(dao.delete(id)).thenThrow(SQLException.class);
+        bo.deleteOrder(id);
     }
 }
